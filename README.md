@@ -6,12 +6,12 @@ This project is an R based statistical analysis of biological measurements from 
 
 ## Data Preparation
 
-We begin by loading the dataset `T6-19` from the `st514` package. The dataset includes length, weight, and gender for 56 anacondas. The columns are renamed for clarity, and the data is split into two groups based on gender: `anacondaMale` and `anacondaFemale`. Only the numeric variables (length and weight) are used in the analysis.
+I begin by loading the dataset `T6-19` from the `st514` package. The dataset includes length, weight, and gender for 56 anacondas. The columns are renamed for clarity, and the data is split into two groups based on gender: `anacondaMale` and `anacondaFemale`. Only the numeric variables (length and weight) are used in the analysis.
 
 
 ## Mean Vectors and Covariance Matrices
 
-We calculate the mean vector and covariance matrix for each gender group. The mean vector gives us the average length and weight for male and female anacondas. The covariance matrix describes how the variables (length and weight) vary together.
+I calculate the mean vector and covariance matrix for each gender group. The mean vector gives me the average length and weight for male and female anacondas. The covariance matrix describes how the variables (length and weight) vary together.
 
 - Female anacondas show higher variance in both length and weight.
 - The covariance between length and weight is stronger for females, indicating a more consistent relationship.
@@ -22,7 +22,7 @@ This provides early evidence that the two groups may differ both in average valu
 
 ## Visualization
 
-We use a scatterplot to visualize the relationship between length and weight. Female anacondas are shown in magenta and males in dark blue.
+I use a scatterplot to visualize the relationship between length and weight. Female anacondas are shown in magenta and males in dark blue.
 
 - The plot shows a clear positive relationship between length and weight.
 - This trend is stronger among female anacondas, supporting the findings from the covariance matrices.
@@ -31,7 +31,7 @@ We use a scatterplot to visualize the relationship between length and weight. Fe
 
 ## Test for Multivariate Normality
 
-Before running any formal multivariate tests, we check whether the data follows a multivariate normal distribution.
+Before running any formal multivariate tests, I check whether the data follows a multivariate normal distribution.
 
 - Mahalanobis distances are calculated for each individual in both groups.
 - Q-Q plots are created, comparing these distances to a theoretical chi-squared distribution.
@@ -56,14 +56,14 @@ This result shows a statistically significant difference between male and female
 
 ## Box’s M Test
 
-To assess whether the covariance structures** (how length and weight vary together) are equal between the two groups, we use Box’s M test.
+To assess whether the covariance structures** (how length and weight vary together) are equal between the two groups, I use Box’s M test.
 
 - A low p-value would indicate significantly different covariance matrices.
 
 **Result:**
 - p-value: 0.059
 
-Since this value is slightly above 0.05, we do not reject the null hypothesis. However, it is close enough that some caution should be used in assuming the groups have equal covariance.
+Since this value is slightly above 0.05, I do not reject the null hypothesis. However, it is close enough that some caution should be used in assuming the groups have equal covariance.
 
 
 ## Conclusion
