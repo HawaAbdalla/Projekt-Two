@@ -1,0 +1,193 @@
+
+```{r}
+library(st514)
+library(readr)
+library(biotools)
+library(stats)
+library(sn)
+library(car)
+library(MASS)
+library(Hotelling)
+library(ggplot2)
+library(lattice)
+
+```
+
+
+```{r}
+data("T6-19")   
+
+anacondaData <- tbl
+
+colnames(anacondaData) <- c("Length", "Weight", "Gender")
+
+```
+
+
+```{r}
+anacondaMale <- anacondaData[ which(anacondaData$Gender=="M"),]
+  
+anacondaFemale <- anacondaData[ which(anacondaData$Gender=="F"),]
+
+anacondaMale <- anacondaMale[,1:2]
+
+anacondaFemale <- anacondaFemale[,1:2]
+```
+
+
+
+MIDDELVÆRDIVEKTORER OG KOVARIANSMATRICER FOR GRUPPERNE
+```{r}
+xBarFemale <- colMeans(anacondaFemale)
+xBarMale <- colMeans(anacondaMale)
+
+covFemale <- cov(anacondaFemale)
+covMale <- cov(anacondaMale)
+
+cat("Mean vector for female anacondas:\n")
+print(xBarFemale)
+cat("\nMean vector for male anacondas:\n")
+print(xBarMale)
+cat("\n\nCovariance matrix for female anacondas:\n")
+print(covFemale)
+cat("\nCovariance matrix for male anacondas:\n")
+print(covMale)
+
+```
+De diagonale elementer (varianserne) fortæller hvor variabiliteten af hver variabel:
+    - Hun-anakondaer varierer meget mere i både længde og vægt sammenlignet med han-anakondaer
+  
+De ikke-diagonale elementer (kovarianserne) fortæller i hvilken grad variablene bevæger sig sammen:
+    - Positive værdier indikerer, at når længde forøges, har vægten en tendens til samme. 
+    - Kovariansen er højere for hun-anakondaer, hvilket indikerer en stærk lineær sammenhæng mellem længde og vægt.
+    
+
+
+
+ 
+VISUALISERING
+```{r}
+plot(x = anacondaData$Length,
+     y = anacondaData$Weight,
+     xlab = "Length",
+     ylab = "Weight",
+     main = "Anaconda Data",
+     col = ifelse(anacondaData$Gender == "F", "magenta", "darkblue"),
+     pch = 19)  
+
+legend("bottomright", legend = c("Female", "Male"),
+       col = c("magenta", "darkblue"), pch = 19)
+```
+Scatter plottet indikerer en stærk lineær sammenhæng mellem vægt og længde ved hun-anakondaer. 
+Denne er også indikeret ved han-anakondaer, omend ikke lige så stærk. 
+
+
+
+
+
+
+
+
+TEST FOR MULTIVARIAT NORMALITET
+  'Gammeldags metode':
+      1. Udregn Mahalanobis afstande fra middelværdivektoren
+      2. Lav et Q-Q plot mod chi-i-anden kvartiler
+      3. Kig efter visuel 'alignment' for at tjekke normalitet
+      
+```{r}
+n <- nrow(anacondaFemale)
+p <- ncol(anacondaFemale)
+
+# Udregn Mahalanobis afstande
+mahalDistF <- mahalanobis(anacondaFemale, center = xBarFemale, cov = covFemale)
+
+sortedMahalDistF <- sort(mahalDistF)
+
+theoretical_q <- qchisq(ppoints(n), df = p)
+
+# Q-Q plot af de sorterede Mahalanobis afstande mod de teoretiske kvartiler af chi-i-anden fordeling med p antal af frihedsgrader
+plot(theoretical_q, sortedMahalDistF,
+     main = "Q-Q Plot of Mahalanobis Distances for Female Anacondas",
+     xlab = "Theoretical Chi-Square Quantiles",
+     ylab = "Ordered Mahalanbos Distances Squared",
+     pch = 19)
+abline(0,1, col = "red")
+
+```
+
+
+```{r}
+n <- nrow(anacondaMale)
+p <- ncol(anacondaMale)
+
+mahalDistM <- mahalanobis(anacondaMale, center = xBarMale, cov = covMale)
+
+sortedMahalDistM <- sort(mahalDistM)
+
+theoretical_q <- qchisq(ppoints(n), df = p)
+
+plot(theoretical_q, sortedMahalDistM,
+     main = "Q-Q Plot of Mahalanobis Distances for Male Anacondas",
+     xlab = "Theoretical Chi-Square Quantiles",
+     ylab = "Ordered Mahalanbos Distances Squared",
+     pch = 19)
+abline(0,1, col = "red")
+
+
+```
+  
+  - For hver observation, udregn Mahalanobis afstanden fra middelværdivektoren
+  - Under multivariat normalitet, følger disse kvadrerede afstande en chi-i-anden fordeling med frihedsgrader 
+    ækvivalent til antallet af variable
+  - Punkter bør falde omkring den 45-grader vinklede røde linje
+  - Systematiske afvigelser indikerer afvigelser fra en multivariat normalitet
+
+
+
+
+
+
+HOTELLING'S T^2 TEST TIL SAMMENLIGNING AF MIDDELVÆRDIVEKTORER
+```{r}
+# Bruger pakken 'Hotellings'
+
+t_squared <- hotelling.test(anacondaFemale, anacondaMale)
+
+cat("Hotelling's T^2 test:\n")
+print(t_squared)
+cat("\n'Test stat' angiver hvor langt middelværdivektorerne er fra hinanden. En større værdi indikerer en større forskel mellem grupper.\n\n'Numerator df' angiver frihedsgraderne, som er relateret til antallet af variable.\n\n'Denominator df' angiver antallet af frihedsgrader relateret til stikprøvestørrelsen.\n\n'P-value' angiver sandsynligheden for at opnå en T^2 værdi mindst så stor som den observerede under antagelse af, at nulhypotesen er sand.\n     E.g., Hvor sandsynligt er det, at se så stor en forskel mellem grupperne ved en tilfældighed, hvis de i virkeligheden ikke var så forskellige? En meget lille p-værdi betyder: 'Forskellen er for stor til at være en tilfældighed!")
+
+```
+
+
+
+
+
+BOX M-TEST TIL SAMMENLIGNING AF KOVARIANSMATRICER
+```{r}
+# Bruger pakken 'biotools'
+
+# --- 1. Definer data (kombiner det) og grupper (Female: n = 28, Male: n = 28)
+combinedData <- rbind(anacondaFemale, anacondaMale)
+group <- factor(c(rep("Female", 28), rep("Male", 28)))
+
+# --- 2. Kør Box's M test
+boxResult <- boxM(combinedData, group)
+
+# --- 3. Print result af test 
+print(boxResult)
+
+# --- 4. Fortolkning
+if (boxResult$p.value < 0.05) {
+  cat("\nConclusion:\n   Reject the null hypothesis -> Covariance matrices are different")
+} else {
+  cat("\nConclusion:\n   Fail to reject the null hypothesis -> Covariance matrices are equal")
+}
+
+```
+
+
+
+
+
+
